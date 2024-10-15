@@ -50,4 +50,6 @@ jobs:
           asset_path: ./release.tar.gz  # Ensure this matches your archive
           asset_name: release.tar.gz  # Update to the name of your archive
           asset_content_type: application/gzip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Add the token here too
 
