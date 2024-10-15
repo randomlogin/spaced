@@ -52,7 +52,6 @@ jobs:
   #       run: cargo test --release
 
   release:
-    # needs: build
     runs-on: ubuntu-latest
 
     steps:
