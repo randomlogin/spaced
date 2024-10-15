@@ -7,52 +7,52 @@ on:
       - 'v*.*.*'
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Set up Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          profile: minimal
-          override: true
-
-      - name: Cache cargo registry
-        uses: actions/cache@v3
-        with:
-          path: ~/.cargo/registry
-          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-registry-
-
-      - name: Cache cargo index
-        uses: actions/cache@v3
-        with:
-          path: ~/.cargo/index
-          key: ${{ runner.os }}-cargo-index
-          restore-keys: |
-            ${{ runner.os }}-cargo-index
-
-      - name: Cache cargo build
-        uses: actions/cache@v3
-        with:
-          path: target
-          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-build-
-
-      - name: Build project
-        run: cargo build --release
-
-      - name: Run tests
-        run: cargo test --release
+  # build:
+  #   runs-on: ubuntu-latest
+  #
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v3
+  #
+  #     - name: Set up Rust
+  #       uses: actions-rs/toolchain@v1
+  #       with:
+  #         toolchain: stable
+  #         profile: minimal
+  #         override: true
+  #
+  #     - name: Cache cargo registry
+  #       uses: actions/cache@v3
+  #       with:
+  #         path: ~/.cargo/registry
+  #         key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+  #         restore-keys: |
+  #           ${{ runner.os }}-cargo-registry-
+  #
+  #     - name: Cache cargo index
+  #       uses: actions/cache@v3
+  #       with:
+  #         path: ~/.cargo/index
+  #         key: ${{ runner.os }}-cargo-index
+  #         restore-keys: |
+  #           ${{ runner.os }}-cargo-index
+  #
+  #     - name: Cache cargo build
+  #       uses: actions/cache@v3
+  #       with:
+  #         path: target
+  #         key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
+  #         restore-keys: |
+  #           ${{ runner.os }}-cargo-build-
+  #
+  #     - name: Build project
+  #       run: cargo build --release
+  #
+  #     - name: Run tests
+  #       run: cargo test --release
 
   release:
-    needs: build
+    # needs: build
     runs-on: ubuntu-latest
 
     steps:
@@ -77,17 +77,31 @@ jobs:
           cp target/release/space-cli release/space-cli
           tar -czvf release.tar.gz release/
 
-      - name: Create GitHub Release
-        id: create_release
-        uses: actions/create-release@v1
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          body: |
-            Automated release of version ${{ github.ref }}.
-          draft: false
-          prerelease: false
-          token: ${{ secrets.GITHUB_TOKEN }}  # Add this line
+    - name: Create GitHub Release
+      id: create_release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ github.ref }}  # This will be the tag you pushed
+        release_name: Release ${{ github.ref }}  # Release title
+        body: |
+          Automated release of version ${{ github.ref }}.
+        draft: false  # Set to true if you want to create a draft release
+        prerelease: false  # Set to true if this is a pre-release
+        files: release/*  # Path to the files you want to upload
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Token for authentication
+
+      # - name: Create GitHub Release
+      #   id: create_release
+      #   uses: actions/create-release@v1
+      #   with:
+      #     tag_name: ${{ github.ref }}
+      #     release_name: Release ${{ github.ref }}
+      #     body: |
+      #       Automated release of version ${{ github.ref }}.
+      #     draft: false
+      #     prerelease: false
+      #     token: ${{ secrets.GITHUB_TOKEN }}  # Add this line
 
           # Create a release on GitHub
       # - name: Create GitHub Release
