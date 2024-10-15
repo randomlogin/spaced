@@ -7,50 +7,6 @@ on:
       - 'v*.*.*'
 
 jobs:
-  # build:
-  #   runs-on: ubuntu-latest
-  #
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v3
-  #
-  #     - name: Set up Rust
-  #       uses: actions-rs/toolchain@v1
-  #       with:
-  #         toolchain: stable
-  #         profile: minimal
-  #         override: true
-  #
-  #     - name: Cache cargo registry
-  #       uses: actions/cache@v3
-  #       with:
-  #         path: ~/.cargo/registry
-  #         key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-  #         restore-keys: |
-  #           ${{ runner.os }}-cargo-registry-
-  #
-  #     - name: Cache cargo index
-  #       uses: actions/cache@v3
-  #       with:
-  #         path: ~/.cargo/index
-  #         key: ${{ runner.os }}-cargo-index
-  #         restore-keys: |
-  #           ${{ runner.os }}-cargo-index
-  #
-  #     - name: Cache cargo build
-  #       uses: actions/cache@v3
-  #       with:
-  #         path: target
-  #         key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
-  #         restore-keys: |
-  #           ${{ runner.os }}-cargo-build-
-  #
-  #     - name: Build project
-  #       run: cargo build --release
-  #
-  #     - name: Run tests
-  #       run: cargo test --release
-
   release:
     runs-on: ubuntu-latest
 
@@ -58,17 +14,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Set up Rust again in the release job
       - name: Set up Rust
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
 
-      # Build the project to create a release artifact
       - name: Build release binary
         run: cargo build --release
 
-      # Archive the release artifacts (binaries)
       - name: Create release archive
         run: |
           mkdir -p release
@@ -76,50 +29,25 @@ jobs:
           cp target/release/space-cli release/space-cli
           tar -czvf release.tar.gz release/
 
-    - name: Create GitHub Release
-      id: create_release
-      uses: softprops/action-gh-release@v1
-      with:
-        tag_name: ${{ github.ref }}  # This will be the tag you pushed
-        release_name: Release ${{ github.ref }}  # Release title
-        body: |
-          Automated release of version ${{ github.ref }}.
-        draft: false  # Set to true if you want to create a draft release
-        prerelease: false  # Set to true if this is a pre-release
-        files: release/*  # Path to the files you want to upload
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Token for authentication
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref }}  # This will be the tag you pushed
+          release_name: Release ${{ github.ref }}  # Release title
+          body: |
+            Automated release of version ${{ github.ref }}.
+          draft: false  # Set to true if you want to create a draft release
+          prerelease: false  # Set to true if this is a pre-release
+          files: release.tar.gz  # Path to the files you want to upload
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Token for authentication
 
-      # - name: Create GitHub Release
-      #   id: create_release
-      #   uses: actions/create-release@v1
-      #   with:
-      #     tag_name: ${{ github.ref }}
-      #     release_name: Release ${{ github.ref }}
-      #     body: |
-      #       Automated release of version ${{ github.ref }}.
-      #     draft: false
-      #     prerelease: false
-      #     token: ${{ secrets.GITHUB_TOKEN }}  # Add this line
-
-          # Create a release on GitHub
-      # - name: Create GitHub Release
-      #   id: create_release
-      #   uses: actions/create-release@v1
-      #   with:
-      #     tag_name: ${{ github.ref }}
-      #     release_name: Release ${{ github.ref }}
-      #     body: |
-      #       Automated release of version ${{ github.ref }}.
-      #     draft: false
-      #     prerelease: false
-      #     generate_release_notes: true
-
-      # Upload the release artifact (binary) to the release
       - name: Upload release asset
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./release.tar.gz
-          asset_name: spaced.tar.gz
+          asset_path: ./release.tar.gz  # Ensure this matches your archive
+          asset_name: release.tar.gz  # Update to the name of your archive
           asset_content_type: application/gzip
+
