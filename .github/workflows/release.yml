@@ -11,11 +11,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout the code from your repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Set up Rust using the official Rust toolchain action
       - name: Set up Rust
         uses: actions-rs/toolchain@v1
         with:
@@ -23,7 +21,6 @@ jobs:
           profile: minimal
           override: true
 
-      # Cache Cargo dependencies to speed up builds
       - name: Cache cargo registry
         uses: actions/cache@v3
         with:
@@ -48,11 +45,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-build-
 
-      # Build the Rust project
       - name: Build project
         run: cargo build --release
 
-      # Run tests to ensure everything works
       - name: Run tests
         run: cargo test --release
 
@@ -82,18 +77,30 @@ jobs:
           cp target/release/space-cli release/space-cli
           tar -czvf release.tar.gz release/
 
-      # Create a release on GitHub
       - name: Create GitHub Release
         id: create_release
         uses: actions/create-release@v1
         with:
           tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          body: |
-            Automated release of version ${{ github.ref }}.
-          draft: false
-          prerelease: false
-          generate_release_notes: true
+        release_name: Release ${{ github.ref }}
+        body: |
+          Automated release of version ${{ github.ref }}.
+        draft: false
+        prerelease: false
+        token: ${{ secrets.GITHUB_TOKEN }}  # Add this line
+
+          # Create a release on GitHub
+      # - name: Create GitHub Release
+      #   id: create_release
+      #   uses: actions/create-release@v1
+      #   with:
+      #     tag_name: ${{ github.ref }}
+      #     release_name: Release ${{ github.ref }}
+      #     body: |
+      #       Automated release of version ${{ github.ref }}.
+      #     draft: false
+      #     prerelease: false
+      #     generate_release_notes: true
 
       # Upload the release artifact (binary) to the release
       - name: Upload release asset
