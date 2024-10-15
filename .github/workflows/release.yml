@@ -82,12 +82,12 @@ jobs:
         uses: actions/create-release@v1
         with:
           tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        body: |
-          Automated release of version ${{ github.ref }}.
-        draft: false
-        prerelease: false
-        token: ${{ secrets.GITHUB_TOKEN }}  # Add this line
+          release_name: Release ${{ github.ref }}
+          body: |
+            Automated release of version ${{ github.ref }}.
+          draft: false
+          prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}  # Add this line
 
           # Create a release on GitHub
       # - name: Create GitHub Release
