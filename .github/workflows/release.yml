@@ -29,27 +29,33 @@ jobs:
           cp target/release/space-cli release/space-cli
           tar -czvf release.tar.gz release/
 
+      # Dynamically create a tag from the pushed version
+      - name: Get the tag name
+        id: get_tag
+        run: echo "TAG=${GITHUB_REF##*/}" >> $GITHUB_ENV
+
       - name: Create GitHub Release
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: test-release
-          release_name: test-release-name
+          tag_name: ${{ env.TAG }}  # Dynamically use the pushed tag
+          release_name: Release ${{ env.TAG }}  # Use the tag for the release name
           body: |
-            Automated release of version ${{ github.ref }}.
-          draft: false  # Set to true if you want to create a draft release
-          prerelease: false  # Set to true if this is a pre-release
-          files: release.tar.gz  # Path to the files you want to upload
+            Automated release of version ${{ env.TAG }}.
+          draft: false
+          prerelease: false
+          files: release.tar.gz
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Token for authentication
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # Upload release asset
       - name: Upload release asset
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./release.tar.gz  # Ensure this matches your archive
-          asset_name: release.tar.gz  # Update to the name of your archive
+          asset_path: ./release.tar.gz
+          asset_name: release-${{ env.TAG }}.tar.gz  # Include the tag in the asset name
           asset_content_type: application/gzip
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Add the token here too
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
