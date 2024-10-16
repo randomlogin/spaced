@@ -33,8 +33,8 @@ jobs:
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.ref }}  # This will be the tag you pushed
-          release_name: Release ${{ github.ref }}  # Release title
+          tag_name: test-release
+          release_name: test-release-name
           body: |
             Automated release of version ${{ github.ref }}.
           draft: false  # Set to true if you want to create a draft release
