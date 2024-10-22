@@ -31,9 +31,6 @@ jobs:
         id: get_tag
         run: | 
           echo "TAG=${GITHUB_REF##*/}" >> $GITHUB_ENV
-          ls -a
-          ls target
-          ls release
 
       - name: Get architecture
         id: arch
@@ -43,10 +40,13 @@ jobs:
       - name: Create release archive
         run: |
           mkdir -p release
+          ls -a
+          ls target
           ARCH="${{ steps.arch.outputs.arch }}"
           echo $ARCH
           cp target/release/spaced release/spaced-${{ env.TAG }}
           cp target/release/space-cli release/space-cli-${{ env.TAG }}
+          ls release
           # tar -czvf release-${{ env.TAG }}.tar.gz release/
 
       - name: Create GitHub Release
