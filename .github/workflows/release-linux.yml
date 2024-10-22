@@ -34,14 +34,14 @@ jobs:
       
       - name: Get OS and architecture
         run: |
-          echo "os=$(uname -s | tr '[:upper:]' '[:lower:]')" >> $GITHUB_STATE
-          echo "arch=$(uname -m)" >> $GITHUB_STATE
+          echo "os=$(uname -s | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+          echo "arch=$(uname -m)" >> $GITHUB_ENV
 
       - name: Create release archive
         run: |
           mkdir -p release
-          ARCH="${{ state.arch }}"
-          OS="${{ state.os }}"
+          ARCH="${{ env.arch }}"
+          OS="${{ env.os }}"
           cp target/release/spaced release/spaced-${{ env.TAG }}-${OS}-${ARCH}
           cp target/release/space-cli release/space-cli-${{ env.TAG }}-${OS}-${ARCH}
 
@@ -56,8 +56,8 @@ jobs:
           draft: false
           prerelease: false
           files: | 
-            release/spaced-${{ env.TAG }}-${{ state.os }}-${{ state.arch }}
-            release/space-cli-${{ env.TAG }}-${{ state.os }}-${{ state.arch }}
+            release/spaced-${{ env.TAG }}-${{ env.os }}-${{ env.arch }}
+            release/space-cli-${{ env.TAG }}-${{ env.os }}-${{ env.arch }}
           make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
