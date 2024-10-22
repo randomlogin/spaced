@@ -1,4 +1,4 @@
-name: Release macOs (arm)
+name: Release macOs (x86_64)
 
 on:
   push:
@@ -27,23 +27,20 @@ jobs:
       - name: Build release binary
         run: cargo build --release
 
-      # Perhaps we can not run tests, as they are run by the CI workflow
+      # Perhaps we can ignore tests, as they are run by the CI workflow
       # - name: Run tests
       #   run: cargo test --release
-
-      - name: Get architecture
-        id: get_arch
-        run: echo "::set-output name=arch::$(uname -m)"
-
-      - name: Get OS
-        id: get_os
-        run: echo "::set-output name=os::$(uname -s | tr '[:upper:]' '[:lower:]')"
+      
+      - name: Get OS and architecture
+        run: |
+          echo "os=$(uname -s | tr '[:upper:]' '[:lower:]')" >> $GITHUB_STATE
+          echo "arch=$(uname -m)" >> $GITHUB_STATE
 
       - name: Create release archive
         run: |
           mkdir -p release
-          ARCH="${{ steps.get_arch.outputs.arch }}"
-          OS="${{ steps.get_os.outputs.os }}"
+          ARCH="${{ state.arch }}"
+          OS="${{ state.os }}"
           cp target/release/spaced release/spaced-${{ env.TAG }}-${OS}-${ARCH}
           cp target/release/space-cli release/space-cli-${{ env.TAG }}-${OS}-${ARCH}
 
@@ -58,8 +55,8 @@ jobs:
           draft: false
           prerelease: false
           files: | 
-            release/spaced-${{ env.TAG }}-${{ steps.get_os.outputs.os }}-${{ steps.get_arch.outputs.arch }}
-            release/space-cli-${{ env.TAG }}-${{ steps.get_os.outputs.os }}-${{ steps.get_arch.outputs.arch }}
+            release/spaced-${{ env.TAG }}-${{ state.os }}-${{ state.arch }}
+            release/space-cli-${{ env.TAG }}-${{ state.os }}-${{ state.arch }}
           make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
