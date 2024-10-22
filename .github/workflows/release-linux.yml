@@ -1,0 +1,84 @@
+name: Release
+
+# Trigger the workflow on push tags like "v*.*.*" (version tags)
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Dynamically create a tag from the pushed version
+      - name: Get the tag name
+        id: get_tag
+        run: | 
+          echo "TAG=${GITHUB_REF##*/}" >> $GITHUB_ENV
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Build release binary
+        run: cargo build --release
+
+      # Perhaps we can not run tests, as they are run by the CI workflow
+      # - name: Run tests
+      #   run: cargo test --release
+
+      - name: Get architecture
+        id: get_arch
+        run: echo "::set-output name=arch::$(uname -m)"
+
+      - name: Get OS
+        id: get_os
+        run: echo "::set-output name=os::$(uname -s | tr '[:upper:]' '[:lower:]')"
+
+      # Either we 
+      - name: Create release archive
+        run: |
+          mkdir -p release
+          # ls -a
+          # echo "in target"
+          # ls target
+          ARCH="${{ steps.get_arch.outputs.arch }}"
+          OS="${{ steps.get_os.outputs.os }}"
+          cp target/release/spaced release/spaced-${{ env.TAG }}-${OS}-${ARCH}
+          cp target/release/space-cli release/space-cli-${{ env.TAG }}-${OS}-${ARCH}
+          # echo "in release"
+          # ls release
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG }}  # Dynamically use the pushed tag
+          name: Release ${{ env.TAG }}  # Use the tag for the release name
+          body: |
+            Automated release of version ${{ env.TAG }}.
+          draft: false
+          prerelease: false
+          files: | 
+            release/spaced-${{ env.TAG }}-${{ steps.get_os.outputs.os }}-${{ steps.get_arch.outputs.arch }}
+            release/space-cli-${{ env.TAG }}-${{ steps.get_os.outputs.os }}-${{ steps.get_arch.outputs.arch }}
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #
+      # # Upload release asset
+      # - name: Upload release asset
+      #   uses: actions/upload-release-asset@v1
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+      #     asset_path: ./release.tar.gz
+      #     asset_name: release-${{ env.TAG }}.tar.gz  # Include the tag in the asset name
+      #     asset_content_type: application/gzip
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
