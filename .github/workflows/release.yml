@@ -14,10 +14,35 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      # Dynamically create a tag from the pushed version
+      - name: Get the tag name
+        id: get_tag
+        run: | 
+          echo "TAG=${GITHUB_REF##*/}" >> $GITHUB_ENV
+
       - name: Set up Rust
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+
+      - name: Install macOS targets
+        run: |
+          rustup target add x86_64-apple-darwin
+          rustup target add aarch64-apple-darwin
+
+      # Build for x86_64
+      - name: Build x86_64 binary
+        run: |
+          cargo build --release --target=x86_64-apple-darwin
+          mv target/x86_64-apple-darwin/release/spaced ./release/spaced-${{ env.TAG }}-macos-x86_64
+          mv target/x86_64-apple-darwin/release/space-cli ./release/space-cli-${{ env.TAG }}-macos-x86_64
+
+      # Build for aarch64
+      - name: Build aarch64 binary
+        run: |
+          cargo build --release --target=aarch64-apple-darwin
+          mv target/aarch64-apple-darwin/release/spaced ./release/spaced-${{ env.TAG }}-macos-arm64
+          mv target/aarch64-apple-darwin/release/space-cli ./release/space-cli-${{ env.TAG }}-macos-arm64
 
       - name: Build release binary
         run: cargo build --release
@@ -25,12 +50,6 @@ jobs:
       # Perhaps we can not run tests, as they are run by the CI workflow
       # - name: Run tests
       #   run: cargo test --release
-
-      # Dynamically create a tag from the pushed version
-      - name: Get the tag name
-        id: get_tag
-        run: | 
-          echo "TAG=${GITHUB_REF##*/}" >> $GITHUB_ENV
 
       - name: Get architecture
         id: get_arch
@@ -45,11 +64,13 @@ jobs:
         run: |
           mkdir -p release
           ls -a
+          echo "in target"
           ls target
           ARCH="${{ steps.get_arch.outputs.arch }}"
           OS="${{ steps.get_os.outputs.os }}"
           cp target/release/spaced release/spaced-${{ env.TAG }}-${OS}-${ARCH}
           cp target/release/space-cli release/space-cli-${{ env.TAG }}-${OS}-${ARCH}
+          echo "in release"
           ls release
 
       - name: Create GitHub Release
@@ -63,8 +84,8 @@ jobs:
           draft: false
           prerelease: false
           files: | 
-            release/spaced-${{ env.TAG }}-${OS}-${ARCH}
-            release/space-cli-${{ env.TAG }}-${OS}-${ARCH}
+            release/spaced-${{ env.TAG }}-${{ steps.get_os.outputs.os }}-${ steps.get_arch.outputs.arch }}
+            release/space-cli-${{ env.TAG }}-${{ steps.get_os.outputs.os }}-${{ steps.get_arch.outputs.arch }}
           make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
