@@ -33,8 +33,12 @@ jobs:
           echo "TAG=${GITHUB_REF##*/}" >> $GITHUB_ENV
 
       - name: Get architecture
-        id: arch
+        id: get_arch
         run: echo "::set-output name=arch::$(uname -m)"
+
+      - name: Get OS
+        id: get_os
+        run: echo "::set-output name=os::$(uname -s | tr '[:upper:]' '[:lower:]')"
 
       # Either we 
       - name: Create release archive
@@ -42,12 +46,11 @@ jobs:
           mkdir -p release
           ls -a
           ls target
-          ARCH="${{ steps.arch.outputs.arch }}"
-          echo $ARCH
-          cp target/release/spaced release/spaced-${{ env.TAG }}
-          cp target/release/space-cli release/space-cli-${{ env.TAG }}
+          ARCH="${{ steps.get_arch.outputs.arch }}"
+          OS="${{ steps.get_os.outputs.os }}"
+          cp target/release/spaced release/spaced-${{ env.TAG }}-${OS}-${ARCH}
+          cp target/release/space-cli release/space-cli-${{ env.TAG }}-${OS}-${ARCH}
           ls release
-          # tar -czvf release-${{ env.TAG }}.tar.gz release/
 
       - name: Create GitHub Release
         id: create_release
@@ -60,8 +63,8 @@ jobs:
           draft: false
           prerelease: false
           files: | 
-            spaced-${{ env.TAG }}
-            space-cli-${{ env.TAG }}
+            release/spaced-${{ env.TAG }}-${OS}-${ARCH}
+            release/space-cli-${{ env.TAG }}-${OS}-${ARCH}
           make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
