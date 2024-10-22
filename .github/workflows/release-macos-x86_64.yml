@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       # Dynamically create a tag from the pushed version
       - name: Get the tag name
@@ -20,9 +20,7 @@ jobs:
           echo "TAG=${GITHUB_REF##*/}" >> $GITHUB_ENV
 
       - name: Set up Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
+        uses: actions-rust-lang/setup-rust-toolchain@v1
 
       - name: Build release binary
         run: cargo build --release
